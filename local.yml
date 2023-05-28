@@ -1,0 +1,37 @@
+version: '3'
+
+
+services:
+  django: &django
+    build:
+      context: .
+      dockerfile: ./docker/app/Dockerfile
+    image: hephaestus:latest
+    container_name: educational-project/django
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./fixtures/:/app/fixtures
+    links:
+      - db
+    command: /start-server
+
+  db:
+    image: postgres:14
+    container_name: educational-project/db
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=md5
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=educational-project
+      - PGUSER=postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
